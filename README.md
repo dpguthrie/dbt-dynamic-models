@@ -88,7 +88,7 @@ dbtgen models
 
 ### dbt Cloud
 
-Currently, this can only be run via a github action, or the similar verbiage for different git providers.  An example action is located [here]](/.github/workflows/test.yml)
+Currently, this can only be run via a github action, or the similar verbiage for different git providers.  An example action is located [here](/.github/workflows/test.yml)
 
 At a high-level, the action does the following:
 
