@@ -34,7 +34,7 @@ dbtgen = "dbt_dynamic_models.cli:main"
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poetry.extra]
+[tool.poetry.extras]
 snowflake = ["dbt-snowflake"]
 bigquery = ["dbt-bigquery"]
 redshift = ["dbt-redshift"]
