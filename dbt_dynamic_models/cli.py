@@ -40,7 +40,8 @@ def models(
     # Set this as an environment variable so dbt knows where to look
     # if profiles_dir is not None:
     #     os.environ['DBT_PROFILES_DIR'] = profiles_dir
-        
+    
+    print(project_dir)
     # Get config to pass to an adapter, let user change the project_dir
     config = get_dbt_config(project_dir)
     
