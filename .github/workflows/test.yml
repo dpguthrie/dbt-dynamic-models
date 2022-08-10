@@ -39,8 +39,8 @@ jobs:
           PROJECT_DIR: ${GITHUB_WORKSPACE}/tests/multi_tenant_example
         run: |
           dbt deps
-          echo "$PROJECT_DIR"
-          dbtgen models --project-dir $PROJECT_DIR
+          echo $PROJECT_DIR
+          dbtgen models --project-dir $(echo $PROJECT_DIR)
       - name: Add dynamic models
         uses: EndBug/add-and-commit@v9
         with:
