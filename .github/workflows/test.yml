@@ -35,9 +35,12 @@ jobs:
             --warehouse TRANSFORMING \
             --database DOUG_DEMO > ~/.dbt/profiles.yml
       - name: Generate models
+        env:
+          PROJECT_DIR: ${GITHUB_WORKSPACE}/tests/multi_tenant_example
         run: |
           dbt deps
-          dbtgen models --project-dir ${PWD}/tests/multi_tenant_example
+          echo "$PROJECT_DIR"
+          dbtgen models --project-dir $PROJECT_DIR
       - name: Add dynamic models
         uses: EndBug/add-and-commit@v9
         with:
