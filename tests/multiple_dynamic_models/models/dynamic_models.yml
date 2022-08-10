@@ -1,0 +1,48 @@
+version: 2
+
+dynamic_models:
+  - name: '{customer}_{model}' # This is the name of the model, what's created, should be unique
+    location: customers/{customer}/ # Where models should be built (folders will be created if not exist)
+    params: # the name of your params need to match your placeholders within SQL
+      - name: customer
+        query: |
+          select lower(schema_name) as customer
+          from doug_demo.information_schema.schemata
+          where schema_name like 'CUST_%'
+      - name: model
+        values:
+          - dim_customers
+          - dim_parts
+          - dim_suppliers
+          - fct_order_items
+          - fct_orders
+    sql: |
+      {{{{ config(schema='{customer}', alias='{model}') }}}}
+
+      select {{{{ dbt_utils.star(ref('{model}'), except=['customer']) }}}}
+      from {{{{ ref('{model}') }}}}
+      where customer = '{customer}'
+
+  - name: '{customer}_customer_acct_balance'
+    location: customers/{customer}/marts/finance
+    params:
+      - name: customer
+        values:
+          - cust_1
+          - cust_2
+          - cust_3
+    sql: |
+      with cte as (
+          select *
+          from {{{{ ref('dim_customers') }}}}
+          where customer = '{customer}'
+      )
+
+      select
+          nation,
+          region,
+          market_segment,
+          sum(account_balance) as total_account_balance
+      from cte
+      group by 1, 2, 3
+  

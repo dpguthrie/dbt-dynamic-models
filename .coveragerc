@@ -1,0 +1,2 @@
+[run]
+source=dbt_dynamic_models

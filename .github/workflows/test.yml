@@ -1,0 +1,47 @@
+name: Dynamic Models
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: '0 0 * * *'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9.x'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install dbt-dynamic-models[snowflake]
+      - name: Generate profiles.yml
+        env:
+          SF_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
+          SF_USER: ${{ secrets.SF_USER }}
+          SF_PASSWORD: ${{ secrets.SF_PASSWORD }}
+        run: |
+          mkdir ~/.dbt/
+          poetry run dbtgen profile \
+            --profile-name multi_tenant \
+            --account $SF_ACCOUNT \
+            --user $SF_USER \
+            --password $SF_PASSWORD \
+            --role TRANSFORMER \
+            --schema DBT_DGUTHRIE \
+            --type snowflake \
+            --warehouse TRANSFORMING \
+            --database DOUG_DEMO > ~/.dbt/profiles.yml
+      - name: Generate models
+        run: |
+          dbt deps
+          poetry run dbtgen models  --project-dir "./tests/multi_tenant_example"
+      - name: Add dynamic models
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: '*.sql'
+          committer_name: Github Actions
+          committer_email: actions@github.com
+          message: 'Added dynamic models via GH action'

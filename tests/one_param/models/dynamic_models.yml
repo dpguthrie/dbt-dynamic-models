@@ -1,0 +1,17 @@
+version: 2
+
+dynamic_models:
+  - name: '{customer}_dim_customers' # This is the name of the model, what's created
+    location: customers/{customer}/ # Where models should be built (folders will be created if not exist)
+    params: # the name of your params need to match your placeholders within SQL
+      - name: customer
+        query: |
+          select lower(schema_name) as schema_name
+          from doug_demo.information_schema.schemata
+          where schema_name like 'CUST_%'
+    sql: |
+      {{{{ config(schema='{customer}', alias='dim_customers') }}}}
+
+      select {{{{ dbt_utils.star(ref('dim_customers'), except=['customer']) }}}}
+      from {{{{ ref('dim_customers') }}}}
+      where customer = '{customer}'
