@@ -24,7 +24,7 @@ jobs:
           SF_PASSWORD: ${{ secrets.SF_PASSWORD }}
         run: |
           mkdir ~/.dbt/
-          poetry run dbtgen profile \
+          dbtgen profile \
             --profile-name multi_tenant \
             --account $SF_ACCOUNT \
             --user $SF_USER \
@@ -37,7 +37,7 @@ jobs:
       - name: Generate models
         run: |
           dbt deps
-          poetry run dbtgen models  --project-dir "./tests/multi_tenant_example"
+          dbtgen models  --project-dir "./tests/multi_tenant_example"
       - name: Add dynamic models
         uses: EndBug/add-and-commit@v9
         with:
