@@ -1,4 +1,5 @@
 # stdlib
+import logging
 from collections import namedtuple
 from itertools import product, starmap
 from typing import Dict, List
@@ -12,44 +13,25 @@ from dbt.contracts.graph.manifest import Manifest
 from dbt_dynamic_models.utils import get_results_from_sql
 
 
-class _Strategy:
+logger = logging.getLogger(__name__)
+
+
+class Param:
     def __init__(
         self,
         dynamic_model: Dict,
-        config: RuntimeConfig,
-        manifest: Manifest,
         adapter: Adapter,
-        handle_iterable: str = 'product',
     ):
         self.dynamic_model = dynamic_model
-        self.config = config
-        self.manifest = manifest,
         self.adapter = adapter
-        self.handle_iterable = handle_iterable
-    
-    @property
-    def product_iterable(self):
-        iterable = self.get_iterable()
-        Product = namedtuple('Product', iterable.keys())
-        named_tuples = starmap(Product, product(*iterable.values()))
-        return [named_tuple._asdict() for named_tuple in named_tuples]
+        self.strategy = self.dynamic_model.get('strategy', 'product')
         
-    def get_iterable(self) -> List[Dict]:
-        raise NotImplementedError
+    STRATEGY_FUNCTION = {
+        'product': product,
+        'row': zip,
+    }
     
-    def execute(self):
-        if self.handle_iterable == 'product':
-            return self.product_iterable
-        
-        else:
-            raise NotImplementedError
-
-
-class ParamStrategy(_Strategy):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def get_iterable(self):
+    def _format_params(self):
         params = {}
         for param in self.dynamic_model['params']:
             if 'values' in param:
@@ -67,3 +49,28 @@ class ParamStrategy(_Strategy):
             else:
                 raise NotImplementedError
         return params
+    
+    
+    def product_check(self, params):
+        pass
+
+    def row_check(self, params: Dict):
+        iterables = [v for k, v in params.items()]
+        length = len(iterables[0])
+        if any(len(ls) != length for ls in iterables):
+            logger.warning('The parameters are of unequal lengths!')
+
+    def get_iterable(self):
+        params = self._format_params()
+        
+        # Check params
+        strategy_check = f'{self.strategy}_check'
+        getattr(self, strategy_check)(params)
+        
+        # Hard error for undefined strategies
+        func = self.STRATEGY_FUNCTION[self.strategy]
+        
+        # Get appropriate iterable based on strategy
+        Iterable = namedtuple('Iterable', params.keys())
+        named_tuples = starmap(Iterable, func(*params.values()))
+        return [named_tuple._asdict() for named_tuple in named_tuples]
