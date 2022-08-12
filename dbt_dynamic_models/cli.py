@@ -16,11 +16,6 @@ from dbt_dynamic_models.base import DynamicModel
 
 app = typer.Typer()
 
-DBT_CLOUD_SERVICE_TOKEN = typer.Option(
-    None,
-    envvar='DBT_CLOUD_SERVICE_TOKEN',
-    help='Service token generated from dbt Cloud'
-)
 DBT_PROFILES_DIR = typer.Option(
     None,
     envvar='DBT_PROFILES_DIR',
@@ -35,7 +30,9 @@ DBT_PROJECT_DIR = typer.Option(
 def models(
     profiles_dir: str = DBT_PROFILES_DIR,
     project_dir=DBT_PROJECT_DIR,
-    service_token=DBT_CLOUD_SERVICE_TOKEN,
+    test_sql: bool = typer.Option(
+        False, help='Test the generated SQL for each model prior to saving.'
+    )
 ):
     # Set this as an environment variable so dbt knows where to look
     # if profiles_dir is not None:
@@ -54,7 +51,7 @@ def models(
 
     manifest = parse_to_manifest(config)
 
-    DynamicModel(config, manifest, adapter).execute()
+    DynamicModel(config, manifest, adapter, test_sql).execute()
     
     
 @app.command(
