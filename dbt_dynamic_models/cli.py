@@ -1,6 +1,7 @@
 # stdlib
 from pathlib import Path
 import json
+import os
 
 # third party
 from dbt.adapters.factory import get_adapter
@@ -34,11 +35,9 @@ def models(
         False, help='Test the generated SQL for each model prior to saving.'
     )
 ):
-    # Set this as an environment variable so dbt knows where to look
-    # if profiles_dir is not None:
-    #     os.environ['DBT_PROFILES_DIR'] = profiles_dir
+    if profiles_dir is not None:
+        os.environ['DBT_PROFILES_DIR'] = profiles_dir
     
-    print(project_dir)
     # Get config to pass to an adapter, let user change the project_dir
     config = get_dbt_config(project_dir)
     
