@@ -4,7 +4,7 @@ dynamic_models:
   - name: '{customer}_{model}'
     location: customers/{customer}/
     params:
-        query: |
+      - query: |
           select lower(schema_name) as customer
           from doug_demo.information_schema.schemata
           where schema_name like 'CUST_%'
