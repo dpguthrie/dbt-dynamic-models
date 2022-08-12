@@ -1,10 +1,9 @@
 version: 2
 
 dynamic_models:
-  - name: '{customer}_{model}' # This is the name of the model, what's created, should be unique
-    location: customers/{customer}/ # Where models should be built (folders will be created if not exist)
-    params: # the name of your params need to match your placeholders within SQL
-      - name: customer
+  - name: '{customer}_{model}'
+    location: customers/{customer}/
+    params:
         query: |
           select lower(schema_name) as customer
           from doug_demo.information_schema.schemata

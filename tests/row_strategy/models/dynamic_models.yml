@@ -1,0 +1,20 @@
+version: 2
+
+dynamic_models:
+  - name: '{customer}_{model}'
+    location: customers/{customer}/
+    strategy: row
+    params:
+      - name: customer
+        query: |
+          select 'cust_1' as customer, 'dim_customers' as model
+          union all
+          select 'cust_2' as customer, 'dim_parts' as model
+          union all
+          select 'cust_3' as customer, 'dim_suppliers' as model
+    sql: |
+      {{{{ config(schema='{customer}', alias='dim_customers') }}}}
+
+      select {{{{ dbt_utils.star(ref('dim_customers'), except=['customer']) }}}}
+      from {{{{ ref('dim_customers') }}}}
+      where customer = '{customer}'
