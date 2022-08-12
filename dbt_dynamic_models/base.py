@@ -9,7 +9,7 @@ from dbt.contracts.graph.manifest import Manifest
 from dbt.lib import execute_sql
 
 # first party
-import dbt_dynamic_models.strategies as strategies
+from dbt_dynamic_models.params import Param
 from dbt_dynamic_models.utils import get_results_from_sql
 
 
@@ -27,25 +27,6 @@ class DynamicModel:
         self.test_sql = test_sql
         self.project_root = config.project_root
         self.model_path = Path(f'{self.project_root}/{config.model_paths[0]}')
-    
-    # The strategies we have to template out SQL from 1:N
-    STRATEGIES = {
-        'params': strategies.ParamStrategy,
-    }
-    
-    def _get_strategy(self, dynamic_model: Dict) -> strategies._Strategy:
-        """Return a strategy to get an iterable given the config of a dynamic model"""
-        strategy = list(self.STRATEGIES.keys() & dynamic_model.keys())
-        if len(strategy) > 1:
-            raise ValueError(f'Multiple strategies found: {", ".join(strategy)}')
-        
-        if len(strategy) == 0:
-            raise ValueError(
-                'Valid strategy not found.  Strategies include: '
-                f'{", ".join(self.STRATEGIES.keys())}'
-            )
-        
-        return self.STRATEGIES[strategy[0]]
 
     def _parse_manifest_for_dynamic_models(self):
         """Return only parts of the manifest that contain a dynamic models key"""
@@ -54,8 +35,8 @@ class DynamicModel:
                 if v['parse_file_type'] == 'schema'
                 and 'dynamic_models' in v['dfy'].keys()
                 # check for project root, allow user to define
-                # what projects to look in (default is root only,
-                # 'all' is an option, and a list of projects)
+                # what projects to look in (default is all,
+                # 'root' should be an option, as well as list of projects)
         }
 
     def _get_operation_node(self, sql, model):
@@ -103,10 +84,7 @@ class DynamicModel:
         for _, dct in schema_dict.items():
             dynamic_models = dct['dfy']['dynamic_models']
             for dynamic_model in dynamic_models:
-                strategy = self._get_strategy(dynamic_model)(
-                    dynamic_model, self.config, self.manifest, self.adapter
-                )
-                iterable = strategy.execute()
+                iterable = Param(dynamic_model, self.adapter).get_iterable()
                 for item in iterable:
                     model = dynamic_model['name'].format(**item)
                     location = dynamic_model['location'].format(**item)
