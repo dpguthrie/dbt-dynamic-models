@@ -1,16 +1,13 @@
 # stdlib
 from pathlib import Path
-from typing import Dict
 
 # third party
 from dbt.adapters.factory import Adapter
 from dbt.config.runtime import RuntimeConfig
 from dbt.contracts.graph.manifest import Manifest
-from dbt.lib import execute_sql
 
 # first party
 from dbt_dynamic_models.params import Param
-from dbt_dynamic_models.utils import get_results_from_sql
 
 
 class DynamicModel:
@@ -31,15 +28,16 @@ class DynamicModel:
     def _parse_manifest_for_dynamic_models(self):
         """Return only parts of the manifest that contain a dynamic models key"""
         return {
-            k: v for k, v in self.manifest.to_dict()['files'].items()
-                if v['parse_file_type'] == 'schema'
-                and 'dynamic_models' in v['dfy'].keys()
-                # check for project root, allow user to define
-                # what projects to look in (default is all,
-                # 'root' should be an option, as well as list of projects)
+            k: v
+            for k, v in self.manifest.to_dict()['files'].items()
+            if v['parse_file_type'] == 'schema' and 'dynamic_models' in v['dfy'].keys()
+            # check for project root, allow user to define
+            # what projects to look in (default is all,
+            # 'root' should be an option, as well as list of projects)
         }
 
     def _get_operation_node(self, sql, model):
+        # third party
         from dbt.parser.manifest import process_node
         from dbt.parser.sql import SqlBlockParser
 
@@ -54,18 +52,19 @@ class DynamicModel:
         return sql_node
 
     def _execute_sql(self, sql, model):
+        # third party
         from dbt.task.sql import SqlExecuteRunner
 
         node = self._get_operation_node(sql, model)
         runner = SqlExecuteRunner(self.config, self.adapter, node, 1, 1)
         return runner.safe_run(self.manifest)
-        
-    def _compile_and_run(self, sql: str, model: str):        
+
+    def _compile_and_run(self, sql: str, model: str):
         sql += ' limit 1'
         results = self._execute_sql(sql, model)
         if len(results.timing) != 2:
             raise RuntimeError('Bad result')
-    
+
     def _write(self, model: str, location: str, sql: str):
         if model[-4:] != '.sql':
             model += '.sql'

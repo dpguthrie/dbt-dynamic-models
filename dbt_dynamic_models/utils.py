@@ -1,11 +1,9 @@
+# third party
 import dbt.clients.agate_helper
 
 
 def get_results_from_sql(
-    adapter,
-    sql: str,
-    auto_begin: bool = False,
-    fetch: bool = False
+    adapter, sql: str, auto_begin: bool = False, fetch: bool = False
 ):
     _, cursor = adapter.add_query(sql, auto_begin)
     response = adapter.connections.get_response(cursor)
