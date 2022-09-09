@@ -2,16 +2,13 @@
 import logging
 from collections import namedtuple
 from itertools import product, starmap
-from typing import Dict, List
+from typing import Dict
 
 # third party
 from dbt.adapters.factory import Adapter
-from dbt.config.runtime import RuntimeConfig
-from dbt.contracts.graph.manifest import Manifest
 
 # first party
 from dbt_dynamic_models.utils import get_results_from_sql
-
 
 logger = logging.getLogger(__name__)
 
@@ -25,12 +22,12 @@ class Param:
         self.dynamic_model = dynamic_model
         self.adapter = adapter
         self.strategy = self.dynamic_model.get('strategy', 'product')
-        
+
     STRATEGY_FUNCTION = {
         'product': product,
         'row': zip,
     }
-    
+
     def _format_params(self):
         params = {}
         for param in self.dynamic_model['params']:
@@ -42,15 +39,14 @@ class Param:
                 )
                 if response.code != 'SUCCESS':
                     raise ValueError(f'Query unsuccessful: {response}')
-                
-                params.update(**{
-                    col.name.lower(): col.values() for col in table.columns
-                })
+
+                params.update(
+                    **{col.name.lower(): col.values() for col in table.columns}
+                )
             else:
                 raise NotImplementedError
         return params
-    
-    
+
     def product_check(self, params):
         pass
 
@@ -62,14 +58,14 @@ class Param:
 
     def get_iterable(self):
         params = self._format_params()
-        
+
         # Check params
         strategy_check = f'{self.strategy}_check'
         getattr(self, strategy_check)(params)
-        
+
         # Hard error for undefined strategies
         func = self.STRATEGY_FUNCTION[self.strategy]
-        
+
         # Get appropriate iterable based on strategy
         Iterable = namedtuple('Iterable', params.keys())
         named_tuples = starmap(Iterable, func(*params.values()))
