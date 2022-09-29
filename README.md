@@ -6,6 +6,8 @@ This package is useful if you have the same SQL query that you need parameterize
 
 ## Overview
 
+Watch a quick loom video!  https://www.loom.com/share/c60b996e408d4534ad048a9308781ff1
+
 This is a simple CLI tool that allows a user to dynamically create models within your dbt project.
 
 ## Requirements
